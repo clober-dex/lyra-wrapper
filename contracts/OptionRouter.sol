@@ -56,7 +56,8 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
 
         (address user, address payer, uint256[] memory tokenIds) = abi.decode(data, (address, address, uint256[]));
 
-        if (inputToken == 1) {
+        if (_factory.isWrappedLyraToken(inputToken)) {
+            // Make at factory
             if (inputAmount > 0) {
                 CloberWrappedLyraToken(inputToken).deposit(msg.sender, 0);
                 IERC20(inputToken).safeTransferFrom(payer, msg.sender, inputAmount);
