@@ -106,6 +106,25 @@ contract WrappedLyraToken is ERC20, CloberWrappedLyraToken {
 
     function deposit(
         address to,
+        uint256 positionId,
+        uint256 amount
+    ) external {
+        require(amount > 0, "EMPTY_INPUT");
+
+        uint256[] memory positionIds = new uint256[](2);
+        positionIds[0] = collateralPositionId;
+        if (_optionToken.positions(positionId).amount == amount) {
+            _optionToken.transferFrom(msg.sender, address(this), positionId);
+            positionIds[1] = positionId;
+        } else {
+            positionIds[1] = _optionToken.split(positionId, amount, 0, address(this));
+        }
+        _merge(positionIds);
+        _mint(to, amount);
+    }
+
+    function deposit(
+        address to,
         uint256[] calldata positionIds_,
         uint256 amount
     ) external returns (uint256 refundTokenId) {
