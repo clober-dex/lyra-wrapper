@@ -30,6 +30,12 @@ interface CloberWrappedLyraToken {
 
     function deposit(
         address to,
+        uint256 positionId,
+        uint256 amount
+    ) external;
+
+    function deposit(
+        address to,
         uint256[] calldata positionIds_,
         uint256 amount
     ) external returns (uint256 refundTokenId);
