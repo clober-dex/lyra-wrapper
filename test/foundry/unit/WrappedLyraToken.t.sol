@@ -7,6 +7,12 @@ import "../../../contracts/interfaces/IShortCollateral.sol";
 import "../../../contracts/WrappedLyraToken.sol";
 
 contract WrappedLyraTokenUnitTest is Test {
+    event Deposit(address indexed sender, address indexed recipient, uint256 amount, uint256[] tokenIds);
+
+    event Withdraw(address indexed sender, address indexed recipient, uint256 amount, uint256 newTokenId);
+
+    event Claim(address indexed sender, address indexed recipient, uint256 amount, uint256 quoteAmount);
+
     string constant URL = "https://arb1.arbitrum.io/rpc";
     uint256 constant BLOCK_NUMBER_CONTRACT_CREATED = 55693330;
     uint256 constant BLOCK_NUMBER_BOARD_CREATED = 64896605;
@@ -126,6 +132,8 @@ contract WrappedLyraTokenUnitTest is Test {
             vm.stopPrank();
             return 0;
         }
+        vm.expectEmit(true, true, true, true);
+        emit Deposit(user, user, amount, positionIds);
         newPositionId = token.deposit(user, positionIds, amount);
         vm.stopPrank();
 
@@ -146,6 +154,8 @@ contract WrappedLyraTokenUnitTest is Test {
             token.withdraw(user, amount);
         } else {
             uint256 beforeBalance = token.balanceOf(user);
+            vm.expectEmit(true, true, true, true);
+            emit Withdraw(user, user, amount, 4138);
             newPositionId = token.withdraw(user, amount);
             assertEq(_lyraBalance(newPositionId), amount);
             assertEq(token.balanceOf(user), beforeBalance - amount);
@@ -156,21 +166,24 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function _claim(address user, uint256 expectedQuoteAmount) private {
         uint256 beforeQuoteBalance = IERC20(market.quoteAsset()).balanceOf(user);
+        vm.startPrank(user);
         if (block.timestamp < market.getOptionBoard(token.boardId()).expiry) {
             vm.expectRevert(
                 abi.encodeWithSelector(IOptionMarket.BoardNotExpired.selector, address(market), token.boardId())
             );
-            vm.prank(user);
             token.claim(user);
             return;
         } else if (lyraToken.getPositionState(collateralPositionId) == IOptionToken.PositionState.SETTLED) {
-            vm.prank(user);
+            vm.expectEmit(true, true, true, true);
+            emit Claim(user, user, IERC20(token).balanceOf(user), expectedQuoteAmount);
             token.claim(user);
         } else if (market.boardToPriceAtExpiry(token.boardId()) == 0) {
-            vm.prank(user);
+            vm.expectEmit(true, true, true, true);
+            emit Claim(user, user, IERC20(token).balanceOf(user), expectedQuoteAmount);
             token.claim(user);
         } else {
-            vm.prank(user);
+            vm.expectEmit(true, true, true, true);
+            emit Claim(user, user, IERC20(token).balanceOf(user), expectedQuoteAmount);
             token.claim(user);
         }
         assertEq(IERC20(market.quoteAsset()).balanceOf(user) - beforeQuoteBalance, expectedQuoteAmount);
