@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 
 import "./interfaces/CloberOrderBook.sol";
 import "./interfaces/CloberMarketSwapCallbackReceiver.sol";
+import "./interfaces/CloberWrappedLyraToken.sol";
 import "./interfaces/CloberRouter.sol";
 import "./interfaces/CloberMarketFactory.sol";
 import "./interfaces/CloberOrderNFT.sol";
@@ -32,15 +33,16 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
     }
 
     constructor(address lyraToken, address factory) {
-        _factory = CloberMarketFactory(factory);
         _lyraToken = IOptionToken(lyraToken);
+        _factory = CloberMarketFactory(factory);
     }
 
-    function safeTransferFromLyraToken(
-        uint256[] memory tokenIds,
-        address form,
-        uint256 amount
-    ) private {}
+    function safeTransferFromLyraToken(uint256[] memory tokenIds, address form) private {
+        uint256 length = tokenIds.length;
+        for (uint256 i = 0; i < length; i++) {
+            _lyraToken.safeTransferFrom(form, address(this), tokenIds[i]);
+        }
+    }
 
     function cloberMarketSwapCallback(
         address inputToken,
@@ -56,11 +58,19 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
 
         (address user, address payer, uint256[] memory tokenIds) = abi.decode(data, (address, address, uint256[]));
 
-        if (_factory.isWrappedLyraToken(inputToken)) {
+        if (true) {
+            // _factory.isWrappedLyraToken(inputToken)
             // Make at factory
             if (inputAmount > 0) {
-                CloberWrappedLyraToken(inputToken).deposit(msg.sender, 0);
-                IERC20(inputToken).safeTransferFrom(payer, msg.sender, inputAmount);
+                safeTransferFromLyraToken(tokenIds, payer);
+                uint256 lyraTokenId;
+                if (tokenIds.length == 1) {
+                    lyraTokenId = tokenIds[0];
+                    CloberWrappedLyraToken(inputToken).deposit(msg.sender, lyraTokenId, inputAmount);
+                } else {
+                    lyraTokenId = CloberWrappedLyraToken(inputToken).deposit(msg.sender, tokenIds, inputAmount);
+                }
+                _lyraToken.safeTransferFrom(address(this), payer, lyraTokenId);
             }
             if (outputAmount > 0) {
                 IERC20(outputToken).safeTransfer(user, outputAmount);
@@ -68,6 +78,9 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
         } else {
             if (inputAmount > 0) {
                 IERC20(inputToken).safeTransferFrom(payer, msg.sender, inputAmount);
+            }
+            if (outputAmount > 0) {
+                CloberWrappedLyraToken(inputToken).withdraw(user, outputAmount);
             }
         }
 
@@ -94,7 +107,6 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
         checkDeadline(params.deadline)
         returns (uint256)
     {
-        _lyraToken.merge();
         return _limitOrder(params, _ASK, lyraTokenIds);
     }
 
@@ -104,6 +116,8 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
         checkDeadline(params.deadline)
         returns (uint256)
     {
+        uint256[] memory lyraTokenIds = new uint256[](1);
+        lyraTokenIds[0] = lyraTokenId;
         return _limitOrder(params, _ASK, lyraTokenIds);
     }
 
