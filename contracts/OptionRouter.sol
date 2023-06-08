@@ -147,7 +147,7 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
         payable
         checkDeadline(params.deadline)
     {
-        _marketOrder(params, _ASK, new uint256[](0));
+        _marketOrder(params, _ASK, lyraTokenIds);
     }
 
     function _marketOrder(
