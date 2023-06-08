@@ -179,7 +179,7 @@ contract WrappedLyraToken is ERC20, CloberWrappedLyraToken {
         if (_optionToken.getPositionState(collateralPositionId) != IOptionToken.PositionState.SETTLED) _settle();
 
         uint256 quoteAmount = (_quoteAsset.balanceOf(address(this)) * balanceOf(msg.sender)) / totalSupply();
-        _quoteAsset.transfer(to, quoteAmount);
+        _quoteAsset.safeTransfer(to, quoteAmount);
         _burn(spender, amount);
         emit Claim(spender, to, amount, quoteAmount);
     }
