@@ -175,41 +175,4 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
             CloberOrderBook(params.market).claim(msg.sender, params.orderKeys);
         }
     }
-
-    // Todo
-    //    function limitBidAfterClaim(ClaimOrderParams[] calldata claimParamsList, LimitOrderParams calldata limitOrderParams)
-    //        external
-    //        payable
-    //        checkDeadline(limitOrderParams.deadline)
-    //        returns (uint256)
-    //    {
-    //        _claim(claimParamsList);
-    //        return _limitOrder(limitOrderParams, _BID);
-    //    }
-    //
-    //    function limitAskAfterClaim(ClaimOrderParams[] calldata claimParamsList, LimitOrderParams calldata limitOrderParams)
-    //        external
-    //        payable
-    //        checkDeadline(limitOrderParams.deadline)
-    //        returns (uint256)
-    //    {
-    //        _claim(claimParamsList);
-    //        return _limitOrder(limitOrderParams, _ASK);
-    //    }
-    //
-    //    function marketBidAfterClaim(
-    //        ClaimOrderParams[] calldata claimParamsList,
-    //        MarketOrderParams calldata marketOrderParams
-    //    ) external payable checkDeadline(marketOrderParams.deadline) {
-    //        _claim(claimParamsList);
-    //        _marketOrder(marketOrderParams, _BID);
-    //    }
-    //
-    //    function marketAskAfterClaim(
-    //        ClaimOrderParams[] calldata claimParamsList,
-    //        MarketOrderParams calldata marketOrderParams
-    //    ) external payable checkDeadline(marketOrderParams.deadline) {
-    //        _claim(claimParamsList);
-    //        _marketOrder(marketOrderParams, _ASK);
-    //    }
 }
