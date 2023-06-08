@@ -4,6 +4,12 @@ import "./IOptionMarket.sol";
 import "./IOptionToken.sol";
 
 interface CloberWrappedLyraToken {
+    event Deposit(address indexed sender, address indexed recipient, uint256 amount, uint256[] tokenIds);
+
+    event Withdraw(address indexed sender, address indexed recipient, uint256 amount, uint256 newTokenId);
+
+    event Claim(address indexed sender, address indexed recipient, uint256 amount, uint256 quoteAmount);
+
     function collateralPositionId() external view returns (uint256);
 
     function expiry() external view returns (uint256);

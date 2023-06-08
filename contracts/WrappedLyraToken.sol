@@ -120,6 +120,9 @@ contract WrappedLyraToken is ERC20, CloberWrappedLyraToken {
             positionIds[1] = _optionToken.split(positionId, amount, 0, address(this));
         }
         _merge(positionIds);
+        positionIds = new uint256[](1);
+        positionIds[0] = positionId;
+        emit Deposit(msg.sender, to, amount, positionIds);
         _mint(to, amount);
     }
 
@@ -142,15 +145,17 @@ contract WrappedLyraToken is ERC20, CloberWrappedLyraToken {
             }
         }
         _merge(positionIds);
+        emit Deposit(msg.sender, to, amount, positionIds_);
         _mint(to, amount);
         return _transferLyra(msg.sender, collateralBalance() - lockedLyraAmount - amount);
     }
 
-    function withdraw(address to, uint256 amount) external returns (uint256) {
+    function withdraw(address to, uint256 amount) external returns (uint256 newTokenId) {
         require(amount > 0, "EMPTY_INPUT");
 
         _burn(msg.sender, amount);
-        return _transferLyra(to, amount);
+        newTokenId = _transferLyra(to, amount);
+        emit Withdraw(msg.sender, to, amount, newTokenId);
     }
 
     function _settle() private {
@@ -169,11 +174,14 @@ contract WrappedLyraToken is ERC20, CloberWrappedLyraToken {
         uint256 amount
     ) internal {
         require((spender != address(0)) && (to != address(0)), "EMPTY_ADDRESS");
+        require(amount != 0);
 
         if (_optionToken.getPositionState(collateralPositionId) != IOptionToken.PositionState.SETTLED) _settle();
 
-        _quoteAsset.transfer(to, (_quoteAsset.balanceOf(address(this)) * balanceOf(msg.sender)) / totalSupply());
+        uint256 quoteAmount = (_quoteAsset.balanceOf(address(this)) * balanceOf(msg.sender)) / totalSupply();
+        _quoteAsset.safeTransfer(to, quoteAmount);
         _burn(spender, amount);
+        emit Claim(spender, to, amount, quoteAmount);
     }
 
     function claim(address to) external {
