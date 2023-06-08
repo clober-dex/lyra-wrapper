@@ -2,13 +2,13 @@ name: Tests for options contracts
 on:
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - '**/*.sol'
       - 'test/**/*.ts'
   push:
     branches:
-      - master
+      - main
     paths:
       - '**/*.sol'
       - 'test/**/*.ts'
