@@ -80,7 +80,11 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
                 IERC20(inputToken).safeTransferFrom(payer, msg.sender, inputAmount);
             }
             if (outputAmount > 0) {
-                CloberWrappedLyraToken(inputToken).withdraw(user, outputAmount);
+                if (CloberWrappedLyraToken(inputToken).positionState() == IOptionToken.PositionState.SETTLED) {
+                    CloberWrappedLyraToken(inputToken).claim(user);
+                } else {
+                    CloberWrappedLyraToken(inputToken).withdraw(user, outputAmount);
+                }
             }
         }
 
