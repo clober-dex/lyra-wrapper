@@ -123,7 +123,15 @@ contract WrappedLyraTokenUnitTest is Test {
             vm.stopPrank();
             return 0;
         }
-        newPositionId = token.deposit(user, positionIds, amount);
+        if (amount % 3 == 0) {
+            // for randomness
+            newPositionId = token.deposit(user, positionIds, amount);
+        } else {
+            if (_lyraBalance(positionId) > amount) {
+                newPositionId = positionId;
+            }
+            token.deposit(user, positionId, amount);
+        }
         vm.stopPrank();
 
         if (newPositionId != 0) {
