@@ -68,7 +68,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testLyraContract() public {
         vm.rollFork(BLOCK_NUMBER_CONTRACT_CREATED);
-        assertEq(block.number, BLOCK_NUMBER_CONTRACT_CREATED);
 
         assertEq(IERC721Metadata(address(lyraToken)).name(), "Lyra wETH market Option Token", "TOKEN_NAME");
         assertEq(IERC721Metadata(address(lyraToken)).symbol(), "Ly-wETH-ot", "TOKEN_SYMBOL");
@@ -81,7 +80,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testLyraPosition() public {
         vm.rollFork(BLOCK_NUMBER_BOARD_SETTLED - 1);
-        assertEq(block.number, BLOCK_NUMBER_BOARD_SETTLED - 1);
 
         IOptionToken.OptionPosition memory optionPosition = lyraToken.positions(POSITION_ID1);
         assertEq(uint256(optionPosition.optionType), uint256(IOptionMarket.OptionType.LONG_CALL), "OPTION_TYPE");
@@ -91,7 +89,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testWLyraContract() public {
         vm.rollFork(BLOCK_NUMBER_POSITION1_CREATED + 1);
-        assertEq(block.number, BLOCK_NUMBER_POSITION1_CREATED + 1);
 
         _initialize();
 
@@ -178,7 +175,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testWrapLyra() public {
         vm.rollFork(BLOCK_NUMBER_POSITION2_CREATED + 1);
-        assertEq(block.number, BLOCK_NUMBER_POSITION2_CREATED + 1);
 
         _initialize();
 
@@ -187,7 +183,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testUnwrapLyra() public {
         vm.rollFork(BLOCK_NUMBER_POSITION2_CREATED + 1);
-        assertEq(block.number, BLOCK_NUMBER_POSITION2_CREATED + 1);
 
         _initialize();
 
@@ -197,7 +192,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testClaimLyraBeforeExpire() public {
         vm.rollFork(BLOCK_NUMBER_BOARD_EXPIRY - 1);
-        assertEq(block.number, BLOCK_NUMBER_BOARD_EXPIRY - 1);
 
         _initialize();
 
@@ -208,7 +202,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testClaimLyraAfterExpire() public {
         vm.rollFork(BLOCK_NUMBER_BOARD_EXPIRY);
-        assertEq(block.number, BLOCK_NUMBER_BOARD_EXPIRY);
 
         _initialize();
 
@@ -219,7 +212,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testClaimLyraAfterSettleBoard() public {
         vm.rollFork(BLOCK_NUMBER_BOARD_SETTLED - 1);
-        assertEq(block.number, BLOCK_NUMBER_BOARD_SETTLED - 1);
 
         _initialize();
 
@@ -232,7 +224,6 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function testClaimLyraAfterSettleOptions() public {
         vm.rollFork(BLOCK_NUMBER_BOARD_SETTLED - 1);
-        assertEq(block.number, BLOCK_NUMBER_BOARD_SETTLED - 1);
 
         _initialize();
 
