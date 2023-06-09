@@ -7,7 +7,7 @@ import "../../../contracts/interfaces/IShortCollateral.sol";
 import "../../../contracts/WrappedLyraToken.sol";
 
 contract WrappedLyraTokenUnitTest is Test {
-    string constant URL = "https://arb1.arbitrum.io/rpc";
+    string constant URL = "https://arbitrum.public-rpc.com";
     uint256 constant BLOCK_NUMBER_CONTRACT_CREATED = 55693330;
     uint256 constant BLOCK_NUMBER_BOARD_CREATED = 64896605;
     uint256 constant BLOCK_NUMBER_POSITION1_CREATED = 72140961;
