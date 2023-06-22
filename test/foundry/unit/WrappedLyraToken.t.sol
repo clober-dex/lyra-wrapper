@@ -109,14 +109,15 @@ contract WrappedLyraTokenUnitTest is Test {
 
     function _deposit(
         address user,
-        uint256 positionId,
+        uint256[] memory positionIds,
         uint256 amount
     ) private returns (uint256 newPositionId) {
-        uint256 beforeLyraBalance = _lyraBalance(positionId);
+        uint256 beforeLyraBalance;
+        for (uint256 i = 0; i < positionIds.length; ++i) {
+            beforeLyraBalance += _lyraBalance(positionIds[i]);
+        }
         vm.startPrank(user);
         lyraToken.setApprovalForAll(address(token), true);
-        uint256[] memory positionIds = new uint256[](1);
-        positionIds[0] = positionId;
         if (beforeLyraBalance < amount) {
             vm.expectRevert(stdError.arithmeticError);
             token.deposit(user, positionIds, amount);
@@ -186,7 +187,9 @@ contract WrappedLyraTokenUnitTest is Test {
 
         _initialize();
 
-        _deposit(USER1, POSITION_ID1, _lyraBalance(POSITION_ID1) / 3);
+        uint256[] memory positionIds = new uint256[](1);
+        positionIds[0] = POSITION_ID1;
+        _deposit(USER1, positionIds, _lyraBalance(POSITION_ID1) / 3);
     }
 
     function testUnwrapLyra() public {
@@ -194,7 +197,9 @@ contract WrappedLyraTokenUnitTest is Test {
 
         _initialize();
 
-        _deposit(USER1, POSITION_ID1, _lyraBalance(POSITION_ID1));
+        uint256[] memory positionIds = new uint256[](1);
+        positionIds[0] = POSITION_ID1;
+        _deposit(USER1, positionIds, _lyraBalance(POSITION_ID1));
         _withdraw(USER1, token.balanceOf(USER1) / 2);
     }
 
@@ -203,7 +208,9 @@ contract WrappedLyraTokenUnitTest is Test {
 
         _initialize();
 
-        _deposit(USER1, POSITION_ID1, _lyraBalance(POSITION_ID1));
+        uint256[] memory positionIds = new uint256[](1);
+        positionIds[0] = POSITION_ID1;
+        _deposit(USER1, positionIds, _lyraBalance(POSITION_ID1));
 
         _claim(USER1, 0);
     }
@@ -213,7 +220,9 @@ contract WrappedLyraTokenUnitTest is Test {
 
         _initialize();
 
-        _deposit(USER1, POSITION_ID1, _lyraBalance(POSITION_ID1));
+        uint256[] memory positionIds = new uint256[](1);
+        positionIds[0] = POSITION_ID1;
+        _deposit(USER1, positionIds, _lyraBalance(POSITION_ID1));
 
         _claim(USER1, 76422764);
     }
@@ -223,7 +232,9 @@ contract WrappedLyraTokenUnitTest is Test {
 
         _initialize();
 
-        _deposit(USER1, POSITION_ID1, _lyraBalance(POSITION_ID1));
+        uint256[] memory positionIds = new uint256[](1);
+        positionIds[0] = POSITION_ID1;
+        _deposit(USER1, positionIds, _lyraBalance(POSITION_ID1));
 
         market.settleExpiredBoard(token.boardId());
 
@@ -235,10 +246,12 @@ contract WrappedLyraTokenUnitTest is Test {
 
         _initialize();
 
-        _deposit(USER1, POSITION_ID1, _lyraBalance(POSITION_ID1));
+        uint256[] memory positionIds = new uint256[](1);
+        positionIds[0] = POSITION_ID1;
+        _deposit(USER1, positionIds, _lyraBalance(POSITION_ID1));
 
         market.settleExpiredBoard(token.boardId());
-        uint256[] memory positionIds = new uint256[](1);
+
         positionIds[0] = collateralPositionId;
         shortCollateral.settleOptions(positionIds);
 
