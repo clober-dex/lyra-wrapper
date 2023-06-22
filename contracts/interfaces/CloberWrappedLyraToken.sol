@@ -29,16 +29,10 @@ interface CloberWrappedLyraToken {
     function getOptionBoard() external view returns (IOptionMarket.OptionBoard memory);
 
     function deposit(
-        address to,
-        uint256 positionId,
-        uint256 amount
-    ) external;
-
-    function deposit(
-        address to,
-        uint256[] calldata positionIds_,
-        uint256 amount
-    ) external returns (uint256 refundTokenId);
+        address,
+        uint256[] calldata,
+        uint256
+    ) external returns (uint256);
 
     function withdraw(address to, uint256 amount) external returns (uint256);
 

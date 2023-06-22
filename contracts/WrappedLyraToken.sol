@@ -9,7 +9,7 @@ import "./interfaces/CloberWrappedLyraToken.sol";
 contract WrappedLyraToken is ERC20, CloberWrappedLyraToken {
     using SafeERC20 for IERC20;
 
-    ILyraRegistry private constant _LYRA_REGISTRY = ILyraRegistry(0x6c87e4364Fd44B0D425ADfD0328e56b89b201329);
+    ILyraRegistry private immutable _LYRA_REGISTRY = ILyraRegistry(0x6c87e4364Fd44B0D425ADfD0328e56b89b201329);
     IOptionMarket private immutable _optionMarket;
     IOptionToken private immutable _optionToken;
     IShortCollateral private immutable _shortCollateral;
@@ -106,39 +106,26 @@ contract WrappedLyraToken is ERC20, CloberWrappedLyraToken {
 
     function deposit(
         address to,
-        uint256 positionId,
-        uint256 amount
-    ) external {
-        require(amount > 0, "EMPTY_INPUT");
-
-        uint256[] memory positionIds = new uint256[](2);
-        positionIds[0] = collateralPositionId;
-        if (_optionToken.positions(positionId).amount == amount) {
-            _optionToken.transferFrom(msg.sender, address(this), positionId);
-            positionIds[1] = positionId;
-        } else {
-            positionIds[1] = _optionToken.split(positionId, amount, 0, address(this));
-        }
-        _merge(positionIds);
-        _mint(to, amount);
-    }
-
-    function deposit(
-        address to,
         uint256[] calldata positionIds_,
         uint256 amount
-    ) external returns (uint256 refundTokenId) {
+    ) external returns (uint256) {
         uint256 length = positionIds_.length;
         require((length > 0) && (amount > 0), "EMPTY_INPUT");
 
         uint256[] memory positionIds = new uint256[](length + 1);
         positionIds[0] = collateralPositionId;
+
         uint256 lockedLyraAmount = collateralBalance();
-        unchecked {
-            for (uint256 i = 1; i <= length; i++) {
-                uint256 positionId = positionIds_[i - 1];
-                _optionToken.transferFrom(msg.sender, address(this), positionId);
-                positionIds[i] = positionId;
+        if ((length == 1) && (_optionToken.positions(positionIds_[0]).amount == amount)) {
+            _optionToken.transferFrom(msg.sender, address(this), positionIds_[0]);
+            positionIds[1] = positionIds_[0];
+        } else {
+            unchecked {
+                for (uint256 i = 0; i < length; i++) {
+                    uint256 positionId = positionIds_[i];
+                    _optionToken.transferFrom(msg.sender, address(this), positionId);
+                    positionIds[i + 1] = positionId;
+                }
             }
         }
         _merge(positionIds);
