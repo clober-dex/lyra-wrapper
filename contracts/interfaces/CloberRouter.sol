@@ -5,6 +5,19 @@ pragma solidity ^0.8.0;
 import "./CloberOrderKey.sol";
 
 interface CloberRouter {
+    function wrap(
+        address,
+        address,
+        uint256[] calldata,
+        uint256
+    ) external returns (uint256);
+
+    function unwrap(
+        address,
+        address,
+        uint256
+    ) external returns (uint256);
+
     /**
      * @notice LimitOrderParams struct contains information about a limit order.
      * @param market The address of the market for this order.
@@ -100,64 +113,4 @@ interface CloberRouter {
      * @param paramsList The list of ClaimOrderParams
      */
     function claim(uint64 deadline, ClaimOrderParams[] calldata paramsList) external;
-
-    //    /**
-    //     * @notice Submits a limit bid order to the order book after claiming a list of orders.
-    //     * @param claimParamsList Array of ClaimOrderParams: The list of orders to be claimed.
-    //     * @param limitOrderParams LimitOrderParams: The parameters for the limit order.
-    //     * @return The order index. If an order is not made `type(uint256).max` is returned instead.
-    //     */
-    //    function limitBidAfterClaim(ClaimOrderParams[] calldata claimParamsList, LimitOrderParams calldata limitOrderParams)
-    //        external
-    //        payable
-    //        returns (uint256);
-    //
-    //    /**
-    //     * @notice Submits a limit ask order to the order book after claiming a list of orders.
-    //     * @param claimParamsList Array of ClaimOrderParams: The list of orders to be claimed.
-    //     * @param limitOrderParams LimitOrderParams: The parameters for the limit order.
-    //     * @return The order index. If an order is not made `type(uint256).max` is returned instead.
-    //     */
-    //    function limitAskAfterClaim(ClaimOrderParams[] calldata claimParamsList, LimitOrderParams calldata limitOrderParams)
-    //        external
-    //        payable
-    //        returns (uint256);
-    //
-    //    /**
-    //     * @notice Submits a market bid order to the order book after claiming a list of orders.
-    //     * @param claimParamsList Array of ClaimOrderParams: The list of orders to be claimed.
-    //     * @param marketOrderParams MarketOrderParams: The parameters for the market order.
-    //     */
-    //    function marketBidAfterClaim(
-    //        ClaimOrderParams[] calldata claimParamsList,
-    //        MarketOrderParams calldata marketOrderParams
-    //    ) external payable;
-    //
-    //    /**
-    //     * @notice Submits a market ask order to the order book after claiming a list of orders.
-    //     * @param claimParamsList Array of ClaimOrderParams: The list of orders to be claimed.
-    //     * @param marketOrderParams MarketOrderParams: The parameters for the market order.
-    //     */
-    //    function marketAskAfterClaim(
-    //        ClaimOrderParams[] calldata claimParamsList,
-    //        MarketOrderParams calldata marketOrderParams
-    //    ) external payable;
-
-    /**
-     * @notice Registers markets to be accepted by the router.
-     * @param markets Markets to be registered.
-     */
-    function registerMarkets(address[] calldata markets) external;
-
-    /**
-     * @notice Unregisters markets denying their use by the router.
-     * @param markets Markets to be unregistered.
-     */
-    function unregisterMarkets(address[] calldata markets) external;
-
-    /**
-     * @notice Checks if the market is registered.
-     * @param market The market to be checked for registration status.
-     */
-    function isRegisteredMarket(address market) external view returns (bool);
 }
