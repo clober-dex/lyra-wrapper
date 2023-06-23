@@ -61,10 +61,7 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
         }
 
         // lyraToken is address(0) when bid order.
-        (address user, address payer, uint256[] memory tokenIds) = abi.decode(
-            data,
-            (address, address, uint256[], address)
-        );
+        (address user, address payer, uint256[] memory tokenIds) = abi.decode(data, (address, address, uint256[]));
 
         if (tokenIds.length > 0) {
             address lyraToken = CloberWrappedLyraToken(CloberOrderBook(msg.sender).baseToken()).optionToken();
