@@ -5,6 +5,19 @@ pragma solidity ^0.8.0;
 import "./CloberOrderKey.sol";
 
 interface CloberRouter {
+    function wrap(
+        address,
+        address,
+        uint256[] calldata,
+        uint256
+    ) external returns (uint256);
+
+    function unwrap(
+        address,
+        address,
+        uint256
+    ) external returns (uint256);
+
     /**
      * @notice LimitOrderParams struct contains information about a limit order.
      * @param market The address of the market for this order.

@@ -23,7 +23,6 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
     bool private constant _ASK = false;
 
     CloberMarketFactory private immutable _factory;
-    IOptionToken private immutable _lyraToken;
 
     modifier checkDeadline(uint64 deadline) {
         if (block.timestamp > deadline) {
@@ -32,15 +31,20 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
         _;
     }
 
-    constructor(address lyraToken, address factory) {
-        _lyraToken = IOptionToken(lyraToken);
+    constructor(address factory) {
         _factory = CloberMarketFactory(factory);
     }
 
-    function safeTransferFromLyraToken(uint256[] memory tokenIds, address form) private {
+    function _safeTransferFromLyraToken(
+        address lyraToken,
+        address form,
+        uint256[] memory tokenIds
+    ) private returns (uint256 amount) {
         uint256 length = tokenIds.length;
+        IOptionToken.OptionPosition[] memory optionPosition = IOptionToken(lyraToken).getOptionPositions(tokenIds);
         for (uint256 i = 0; i < length; i++) {
-            _lyraToken.safeTransferFrom(form, address(this), tokenIds[i]);
+            IOptionToken(lyraToken).safeTransferFrom(form, address(this), tokenIds[i]);
+            amount += optionPosition[i].amount;
         }
     }
 
@@ -56,36 +60,32 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
             revert Errors.CloberError(Errors.ACCESS);
         }
 
-        (address user, address payer, uint256[] memory tokenIds) = abi.decode(data, (address, address, uint256[]));
+        // lyraToken is address(0) when bid order.
+        (address user, address payer, uint256[] memory tokenIds) = abi.decode(
+            data,
+            (address, address, uint256[], address)
+        );
 
         if (tokenIds.length > 0) {
-            // _factory.isWrappedLyraToken(inputToken)
-            // Make at factory
-            if (inputAmount > 0) {
-                safeTransferFromLyraToken(tokenIds, payer);
-                uint256 lyraTokenId;
-                if (tokenIds.length == 1) {
-                    lyraTokenId = tokenIds[0];
-                    CloberWrappedLyraToken(inputToken).deposit(msg.sender, lyraTokenId, inputAmount);
-                } else {
-                    lyraTokenId = CloberWrappedLyraToken(inputToken).deposit(msg.sender, tokenIds, inputAmount);
-                }
-                _lyraToken.safeTransferFrom(address(this), payer, lyraTokenId);
+            address lyraToken = CloberWrappedLyraToken(CloberOrderBook(msg.sender).baseToken()).optionToken();
+            uint256 totalAmount = _safeTransferFromLyraToken(lyraToken, payer, tokenIds);
+            uint256 lyraTokenId;
+
+            if (totalAmount < inputAmount) {
+                lyraTokenId = CloberWrappedLyraToken(inputToken).deposit(msg.sender, tokenIds, totalAmount);
+                inputAmount -= totalAmount;
+            } else {
+                lyraTokenId = CloberWrappedLyraToken(inputToken).deposit(msg.sender, tokenIds, inputAmount);
+                if (lyraTokenId != 0) IOptionToken(lyraToken).safeTransferFrom(address(this), payer, lyraTokenId);
+                inputAmount = 0;
             }
-            if (outputAmount > 0) {
-                IERC20(outputToken).safeTransfer(user, outputAmount);
-            }
-        } else {
-            if (inputAmount > 0) {
-                IERC20(inputToken).safeTransferFrom(payer, msg.sender, inputAmount);
-            }
-            if (outputAmount > 0) {
-                if (CloberWrappedLyraToken(inputToken).positionState() == IOptionToken.PositionState.SETTLED) {
-                    CloberWrappedLyraToken(inputToken).claim(user);
-                } else {
-                    CloberWrappedLyraToken(inputToken).withdraw(user, outputAmount);
-                }
-            }
+        }
+
+        if (inputAmount > 0) {
+            IERC20(inputToken).safeTransferFrom(payer, msg.sender, inputAmount);
+        }
+        if (outputAmount > 0) {
+            IERC20(outputToken).safeTransfer(user, outputAmount);
         }
 
         if (address(this).balance > 0) {
@@ -94,6 +94,30 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
                 revert Errors.CloberError(Errors.FAILED_TO_SEND_VALUE);
             }
         }
+    }
+
+    function wrap(
+        address to,
+        address wLyraToken,
+        uint256[] calldata positionIds,
+        uint256 amount
+    ) external returns (uint256) {
+        address lyraToken = CloberWrappedLyraToken(wLyraToken).optionToken();
+        _safeTransferFromLyraToken(lyraToken, msg.sender, positionIds);
+        uint256 refundedPositionId = CloberWrappedLyraToken(wLyraToken).deposit(to, positionIds, amount);
+        if (refundedPositionId > 0) {
+            IOptionToken(lyraToken).safeTransferFrom(address(this), to, refundedPositionId);
+        }
+        return refundedPositionId;
+    }
+
+    function unwrap(
+        address to,
+        address wLyraToken,
+        uint256 amount
+    ) external returns (uint256) {
+        IERC20(wLyraToken).safeTransferFrom(msg.sender, address(this), amount);
+        return CloberWrappedLyraToken(wLyraToken).withdraw(to, amount);
     }
 
     function limitBid(LimitOrderParams calldata params)
@@ -111,17 +135,6 @@ contract OptionRouter is CloberMarketSwapCallbackReceiver, CloberRouter {
         checkDeadline(params.deadline)
         returns (uint256)
     {
-        return _limitOrder(params, _ASK, lyraTokenIds);
-    }
-
-    function limitAsk(LimitOrderParams calldata params, uint256 lyraTokenId)
-        external
-        payable
-        checkDeadline(params.deadline)
-        returns (uint256)
-    {
-        uint256[] memory lyraTokenIds = new uint256[](1);
-        lyraTokenIds[0] = lyraTokenId;
         return _limitOrder(params, _ASK, lyraTokenIds);
     }
 
